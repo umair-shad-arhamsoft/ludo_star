@@ -274,6 +274,18 @@ class Game {
     });
   }
 
+  animateDice(value) {
+    const face = this.diceFace;
+    let count = 0;
+    const spin = setInterval(() => {
+      face.textContent = this.random(1, 6);
+      if (++count >= 6) {
+        clearInterval(spin);
+        face.textContent = value;
+      }
+    }, 70);
+  }
+
   resolveRoll() {
     if (this.gameOver) return;
     const validTokens = this.getValidMoves(this.currentPlayer, this.diceValue);
@@ -577,10 +589,11 @@ class Game {
   triggerCelebration(color) {
     this.confettiLayer.classList.remove('hidden');
     this.confettiLayer.innerHTML = '';
+    const celebrationColor = COLOR_STYLE[color]?.fill || COLOR_STYLE.red.fill;
     for (let i = 0; i < 42; i += 1) {
       const piece = document.createElement('div');
       piece.className = 'confetti-piece';
-      piece.style.background = COLOR_STYLE[COLOR_STYLE[color] ? color : 'red'].fill;
+      piece.style.background = celebrationColor;
       piece.style.left = `${Math.random() * 100}%`;
       piece.style.top = `${Math.random() * 10}%`;
       piece.style.opacity = `${0.7 + Math.random() * 0.3}`;
@@ -651,13 +664,15 @@ class Game {
   }
 
   getTokenSummary(player) {
-    return player.tokens.reduce(
+    const counts = player.tokens.reduce(
       (summary, token) => {
         summary[token.status] += 1;
         return summary;
       },
-      { nest: 0, track: 0, home: 0, finished: 0, ready: false }
+      { nest: 0, track: 0, home: 0, finished: 0 }
     );
+    counts.ready = this.getValidMoves(player, this.diceValue || 6).length > 0;
+    return counts;
   }
 
   renderBoard() {
